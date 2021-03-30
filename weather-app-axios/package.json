@@ -1,0 +1,23 @@
+{
+  "name": "nodejs-coremodules-practic-1",
+  "version": "1.0.0",
+  "description": "- 1. Retrieve weather data from API using HTTP core module, for the city recieved in the process arguments\r - 2. Process the recieved data\r - 3. Log the result",
+  "main": "weather-app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Endava-NodeJS/nodejs-coremodules-practic-1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Endava-NodeJS/nodejs-coremodules-practic-1/issues"
+  },
+  "homepage": "https://github.com/Endava-NodeJS/nodejs-coremodules-practic-1#readme",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
