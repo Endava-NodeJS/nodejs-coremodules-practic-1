@@ -7,6 +7,17 @@
     "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "test/*",
+      "docs/*"
+    ],
+    "delay": "2500",
+    "watch": [
+      "src"
+    ],
+    "exec": "node ./src/index.js"
+  },
   "keywords": [],
   "author": "mnegal",
   "license": "ISC",
