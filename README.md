@@ -5,3 +5,6 @@ In this repository we track our workshop practical lession activity. So on each 
 For indvidual work/experments please follow the next approach:
  - checkout new branch with your name from master branch with the latest changes.
  - place your work in the root of the repository with following naming pattern "```{your name}-solution-{number of the lesson, if necessary}```"
+
+
+During the practical lessons, use ```practica``` branch for the work. Branch should contain the latest changes at the beggining of the each practical lesson, and all changes should be commit at the end.
