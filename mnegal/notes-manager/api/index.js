@@ -16,7 +16,23 @@ module.exports = app => {
     });
   });
 
-  app.post('/add', (req, res) => {
+  app.get('/notes/:id', (req, res) => {
+    const { id } = req.params;
+
+    fs.readFile(fileName, 'utf8', (err, data) => {
+      if (err) {
+        return res.status(400).send(err.message);
+      }
+
+      const notes = JSON.parse(data);
+      if (!notes[id]) {
+        return res.status(400).send('Note with such ID not found!');
+      }
+      res.status(200).type('application/json').send(notes[id]);
+    });
+  });
+
+  app.post('/notes', (req, res) => {
     const id = Date.now();
     const body = { id, ...req.body };
 
@@ -33,8 +49,13 @@ module.exports = app => {
     });
   });
 
-  app.put('/edit', (req, res) => {
-    const { body } = req;
+  app.put('/notes/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    if (!title || !content) {
+      res.status(400).send('Pls provide data to update!');
+    }
 
     fs.readFile(fileName, 'utf8', (err, data) => {
       if (err) {
@@ -42,17 +63,40 @@ module.exports = app => {
       }
 
       const notes = JSON.parse(data);
-      if (!notes[body.id]) {
+      if (!notes[id]) {
         return res.status(400).send('Note with such ID not found!');
       }
 
-      notes[body.id] = body;
+      notes[id] = { id, title, content };
 
       fs.writeFile(fileName, JSON.stringify(notes), err => {
         if (err) {
           return res.status(400).send(err.message);
         }
-        res.status(200).type('application/json').send(body);
+        res.status(200).type('application/json').send(notes[id]);
+      });
+    });
+  });
+
+  app.delete('/notes/:id', (req, res) => {
+    const { id } = req.params;
+
+    fs.readFile(fileName, 'utf8', (err, data) => {
+      if (err) {
+        return res.status(400).send(err.message);
+      }
+
+      const notes = JSON.parse(data);
+      if (!notes[id]) {
+        return res.status(400).send('Note with such ID not found!');
+      }
+
+      const { id: deletedId, ...rest } = notes;
+      fs.writeFile(fileName, JSON.stringify(rest), err => {
+        if (err) {
+          return res.status(400).send(err.message);
+        }
+        res.status(200).type('application/json').send(rest);
       });
     });
   });
