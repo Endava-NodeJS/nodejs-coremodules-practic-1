@@ -36,26 +36,18 @@ module.exports = (app, db) => {
     const id = Date.now()
     const { title, content } = req.body
 
-    db.run(`INSERT INTO notes (title, content) values(${title}, ${content})`)
+    db.run(`INSERT INTO notes (title, content) values("${title}", "${content}")`)
       .then(data => {
-        console.log(data)
+        res.send(200, data.lastID)
+        // res.sendStatus(200).send(data.lastID)
       })
       .catch(err => {
         console.log(err)
-        // return res.status(400).send(err.message)
+        if (err && err.errno == 19) {
+          return res.send(400, 'This title already exists')
+        }
+        return res.status(400).send(err.message)
       });
-
-    // fs.readFile(fileName, (err, data) => {
-    //   const notes = JSON.parse(data)
-    //   notes[id] = body
-
-    //   fs.writeFile(fileName, JSON.stringify(notes), (err) => {
-    //     if (err) {
-    //       return res.status(400).send(err.message)
-    //     }
-    //     res.status(200).type('application/json').send(body)
-    //   })
-    // })
   })
 
   app.put('/notes/:id', (req, res) => {
