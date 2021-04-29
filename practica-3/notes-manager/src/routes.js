@@ -8,45 +8,46 @@ module.exports = (app, db) => {
   })
 
   app.get('/notes', (req, res) => {
-    fs.readFile(fileName, 'utf8', (err, data) => {
-      if (err) {
-        return res.status(400).send(err.message)
-      }
-      res.status(200).type('application/json').send(data)
-    })
+    db.all('SELECT * FROM notes')
+      .then(data => {
+        res.status(200).type('application/json').send(data)
+      })
+      .catch(err => {
+        res.status(400).send(err.message)
+      })
   })
 
   app.get('/notes/:id', (req, res) => {
     const { id } = req.params
 
-    fs.readFile(fileName, 'utf8', (err, data) => {
-      if (err) {
+    db.get(`SELECT content, title, id FROM notes WHERE id=${id}`)
+      .then(note => {
+        if (!note) {
+          return res.status(400).send('Note with such ID not found!')
+        }
+        res.status(200).type('application/json').send(note)
+      })
+      .catch(err => {
         return res.status(400).send(err.message)
-      }
-
-      const notes = JSON.parse(data)
-      if (!notes[id]) {
-        return res.status(400).send('Note with such ID not found!')
-      }
-      res.status(200).type('application/json').send(notes[id])
-    })
+      })
   })
 
   app.post('/notes', (req, res) => {
     const id = Date.now()
-    const body = { id, ...req.body }
+    const { title, content } = req.body
 
-    fs.readFile(fileName, (err, data) => {
-      const notes = JSON.parse(data)
-      notes[id] = body
-
-      fs.writeFile(fileName, JSON.stringify(notes), (err) => {
-        if (err) {
-          return res.status(400).send(err.message)
-        }
-        res.status(200).type('application/json').send(body)
+    db.run(`INSERT INTO notes (title, content) values("${title}", "${content}")`)
+      .then(data => {
+        res.send(200, data.lastID)
+        // res.sendStatus(200).send(data.lastID)
       })
-    })
+      .catch(err => {
+        console.log(err)
+        if (err && err.errno == 19) {
+          return res.send(400, 'This title already exists')
+        }
+        return res.status(400).send(err.message)
+      });
   })
 
   app.put('/notes/:id', (req, res) => {
