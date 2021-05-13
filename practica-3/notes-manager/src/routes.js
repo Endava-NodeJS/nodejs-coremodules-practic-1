@@ -28,7 +28,7 @@ module.exports = (app, db) => {
         res.status(200).type('application/json').send(note)
       })
       .catch(err => {
-        return res.status(400).send(err.message)
+        return res.status(500).send(err.message)
       })
   })
 
@@ -54,28 +54,36 @@ module.exports = (app, db) => {
     const { id } = req.params
     const { title, content } = req.body
 
-    if (!title || !content) {
+    if (!title && !content) {
       res.status(400).send('Pls provide data to update!')
     }
 
-    fs.readFile(fileName, 'utf8', (err, data) => {
-      if (err) {
-        return res.status(400).send(err.message)
-      }
-
-      const notes = JSON.parse(data)
-      if (!notes[id]) {
+    db.get(`SELECT content, title, id FROM notes WHERE id=${id}`)
+    .then(note => {
+      if (!note) {
         return res.status(400).send('Note with such ID not found!')
       }
 
-      notes[id] = { id, title, content }
-
-      fs.writeFile(fileName, JSON.stringify(notes), (err) => {
-        if (err) {
-          return res.status(400).send(err.message)
-        }
-        res.status(200).type('application/json').send(notes[id])
+      const fields = [];
+      if(title) {
+        fields.push(`title="${title}"`)
+      }
+      if(content) {
+        fields.push(`content="${content}"`)
+      }
+  
+      db.run(`UPDATE notes SET ${fields.join(',')} WHERE id="${id}"`)
+      .then(data => {
+        console.log(data);
+        res.send(204);
       })
+      .catch(err => {
+        console.log(err);
+        return res.status(400).send(err.message);
+      })
+    })
+    .catch(err => {
+      return res.status(500).send(err.message)
     })
   })
 
