@@ -4,7 +4,7 @@ module.exports = (app, db) => {
   });
 
   app.get('/notes', (req, res) => {
-    db.all('SELECT * FROM notes')
+    db.all('SELECT * FROM users')
       .then(data => {
         res.status(200).type('application/json').send(data);
       })
