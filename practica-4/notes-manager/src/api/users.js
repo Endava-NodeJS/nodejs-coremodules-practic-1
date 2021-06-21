@@ -1,26 +1,6 @@
-const bcrypt = require('bcrypt')
-const saltRounds = 10
-const userRegexp = /^[a-z]*[0-9]*$/gi
+const auth = require('../configs/auth')
 
-const hashPassword = (password) =>
-  new Promise((res, rej) =>
-    bcrypt.hash(password, saltRounds, function (err, hash) {
-      if (err) {
-        return rej(err)
-      }
-      res(hash)
-    })
-  )
-
-const comparePasswords = (dbPassword, password) =>
-  new Promise((res, rej) =>
-    bcrypt.compare(password, dbPassword, function (err, result) {
-      if (err) {
-        return rej(err)
-      }
-      res(result)
-    })
-  )
+const userRegexp = /^[^\s@]+@[^\s@]+$/gi
 
 module.exports = (app, db) => {
   app.get('/users', (req, res) => {
@@ -33,18 +13,15 @@ module.exports = (app, db) => {
       })
   })
 
-  app.post('/users', (req, res) => {
-    const { userName, password, confirmPassword } = req.body
+  app.post('/signup', (req, res) => {
+    const { email, password, confirmPassword } = req.body
 
-    if (!userName) {
-      return res.status(400).send('Pls provide user name!')
+    if (!email) {
+      return res.status(400).send('Pls provide user email!')
     }
-    console.log(userName, !userRegexp.test(userName))
 
-    if (!userRegexp.test(userName)) {
-      return res
-        .status(400)
-        .send('Pls use only alpha numeric characters for username!')
+    if (!userRegexp.test(email)) {
+      return res.status(400).send('Pls provide correct email!')
     }
 
     if (!password || !confirmPassword) {
@@ -59,10 +36,11 @@ module.exports = (app, db) => {
         .send('Password and confirm password does not match')
     }
 
-    hashPassword(password)
+    auth
+      .hashPassword(password)
       .then((hash) => {
         db.run(
-          `INSERT INTO users (userName, password) values("${userName}", "${hash}")`
+          `INSERT INTO users (email, password) values("${email}", "${hash}")`
         )
           .then((data) => {
             // send confirmation email service and activation link
@@ -71,7 +49,7 @@ module.exports = (app, db) => {
           .catch((err) => {
             console.log(err)
             if (err && err.errno == 19) {
-              return res.send(400, 'This userName already exists')
+              return res.send(400, 'This email already exists')
             }
             return res.status(400).send(err.message)
           })
@@ -79,6 +57,53 @@ module.exports = (app, db) => {
       .catch((err) => {
         console.log(err)
         return res.status(500).send('Internal server error')
+      })
+  })
+
+  app.post('/signin', (req, res) => {
+    const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.status(400).send('Email or password is not valid!')
+    }
+
+    if (!userRegexp.test(email)) {
+      return res.status(400).send('Pls provide correct email!')
+    }
+
+    db.get(`SELECT * FROM users WHERE email="${email}"`)
+      .then((user) => {
+        if (!user) {
+          return res.status(400).send('This user does not exists!')
+        }
+
+        const { password: dbPassword, ...userData } = user
+        
+        auth
+          .hashPassword(password)
+          .then((hashedPassword) => {
+            console.log(dbPassword, hashedPassword)
+            if (hashedPassword !== dbPassword) {
+              return res.status(400).send('Password is not correct!')
+            }
+            auth
+              .encode(user)
+              .then((token) => {
+                return res
+                  .status(200)
+                  .type('application/json')
+                  .send({ ...userData, token })
+              })
+              .catch((err) => {
+                return res.status(500).send(err.message)
+              })
+          })
+          .catch((err) => {
+            return res.status(500).send(err.message)
+          })
+      })
+      .catch((err) => {
+        return res.status(500).send(err.message)
       })
   })
 }
