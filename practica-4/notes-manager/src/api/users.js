@@ -1,6 +1,6 @@
 const auth = require('../configs/auth')
 
-const userRegexp = /^[^\s@]+@[^\s@]+$/gi
+const userRegexp = /^[^\s@]+@[^\s@]+$/i
 
 module.exports = (app, db) => {
   app.get('/users', (req, res) => {
@@ -78,7 +78,7 @@ module.exports = (app, db) => {
         }
 
         const { password: dbPassword, ...userData } = user
-        
+
         auth
           .hashPassword(password)
           .then((hashedPassword) => {
