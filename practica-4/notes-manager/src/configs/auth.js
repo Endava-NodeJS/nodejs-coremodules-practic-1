@@ -1,29 +1,36 @@
-const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 
-const saltRounds = 10
-
 const jwtSecret = 'secret'
+const cryptoSecret = 'silence-is-gold';
 
-exports.hashPassword = (password) =>
-  new Promise((res, rej) =>
-    bcrypt.hash(password, saltRounds, function (err, hash) {
-      if (err) {
-        return rej(err)
-      }
-      res(hash)
-    })
-  )
+exports.hashPassword = function (password) {
+  return new Promise((res, rej) => {
+    try {
+      const hash = crypto.createHmac('sha256', cryptoSecret)
+        .update(password)
+        .digest('hex');
 
-exports.comparePasswords = (dbPassword, password) =>
-  new Promise((res, rej) =>
-    bcrypt.compare(password, dbPassword, function (err, result) {
-      if (err) {
-        return rej(err)
+      if (!hash) {
+        throw new Error('Unable to create hmac hash, or hash is invalid!', hash);
       }
-      res(result)
-    })
-  )
+
+      res(hash);
+    } catch (e) {
+      rej(e);
+    }
+  })
+};
+
+exports.comparePasswords = function (dbPassword, password) {
+  const { hashPassword } = this;
+
+  return new Promise((res, rej) => {
+    hashPassword(password)
+      .then((hash) => res(hash === dbPassword))
+      .catch(rej);
+  });
+}
 
 exports.encode = (payload) =>
   new Promise((res, rej) =>
