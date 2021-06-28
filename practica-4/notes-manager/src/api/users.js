@@ -1,4 +1,5 @@
-const auth = require('../configs/auth')
+const guest = require('../middlewares/guest')
+const auth = require('../services/auth')
 
 const userRegexp = /^[^\s@]+@[^\s@]+$/i
 
@@ -13,7 +14,7 @@ module.exports = (app, db) => {
       })
   })
 
-  app.post('/signup', (req, res) => {
+  app.post('/signup', guest, (req, res) => {
     const { email, password, confirmPassword } = req.body
 
     if (!email) {
@@ -60,7 +61,7 @@ module.exports = (app, db) => {
       })
   })
 
-  app.post('/signin', (req, res) => {
+  app.post('/signin', guest, (req, res) => {
     const { email, password } = req.body
 
     if (!email || !password) {

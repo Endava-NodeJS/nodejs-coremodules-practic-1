@@ -1,7 +1,7 @@
 const { open } = require('sqlite')
 const path = require('path')
 
-const auth = require('../src/configs/auth')
+const auth = require('./services/auth')
 
 const dbPath = path.join(__dirname, '../db/data.db')
 
@@ -11,14 +11,14 @@ module.exports = () =>
       const queue = [
         new Promise((res, rej) => {
           db.run(
-            'CREATE TABLE IF NOT EXISTS notes (id INTEGER NOT NULL PRIMARY KEY, title TEXT UNIQUE, content TEXT)'
+            'CREATE TABLE IF NOT EXISTS notes (id INTEGER NOT NULL PRIMARY KEY, title TEXT UNIQUE, content TEXT, userId INTEGER)'
           )
             .then(() => {
               db.all('SELECT * FROM notes')
                 .then((data) => {
                   if (!data.length) {
                     db.run(
-                      'INSERT INTO notes (title, content) values("First title", "Content goes here")'
+                      'INSERT INTO notes (title, content,userId) values("First title", "Content goes here", 0)'
                     )
                       .then(res)
                       .catch(rej)
