@@ -1,24 +1,30 @@
-### File uploading
+### Video file archive creation
 
-In this lesson we'll learn how to implement file uploading functionality for our API.
-It will be based on the previously created API (notes CRUD + Auth + DB).
+***What we have to implement:***
 
-#### Here’s what we have to implement during the session:
- - Create PUT /avatar-upload authorized endpoint, that we can use to upload avatar image and store it for the related user (image should be scaled to not be more than 120px on both sides).
+1) Create /video-download endpoint.
+2) Create Readable stream that will read the file.
+3) Transform file using [zlib module](https://nodejs.org/api/zlib.html#zlib_zlib).
+4) Use pipeline method from stream module to read, transform and write the file to the response
+   object. [pipeline](https://nodejs.org/api/stream.html#stream_stream_pipeline_source_transforms_destination_callback)
+5) Return transformed file as a response.
 
- - We have to validate the uploaded image, sending appropriate validation errors as a response, so the user would know which rules weren't taken into consideration while uploading the image. **Here are the validation criteria:**
-    - Only image format should be received (jpg, png)
-    - Image dimensions must not exceed 1200x1200 px
-    - Image size must not exceed 1mb
-    - Only one image should be received
- 
- - We have to expose the uri to the avatar with other info within user object (except the password field) as a response body for GET /user
+### Video streaming
 
----
-1) To test the implementation you have to make PUT /avatar-upload request with form data that includes "avatar" file field. (Including the Authorization header)
-2) To do the GET /user request
----
+***What we have to implement:***
 
-#### Here are some useful links:
-- You can use [Jimp](https://www.npmjs.com/package/jimp) to scale the avatar image before storing it.
-- To simplify the file upload handling process you can use [Multer](https://www.npmjs.com/package/multer) .
+1) Create a readable stream for the file "flowers.mp4" in the public/video directory.
+2) Send video chunk by chunk as a response for the GET /video, sending 206 status code.
+
+Chunk should be sliced from the file, with size based
+on ['Range'](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range) header (if provided). Also, be aware
+of ['Accept-Ranges'](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Ranges)
+and ['Content-Range'](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range) headers. They have to be
+sent as a response.
+
+Here are some other headers that should be taken in consideration 'Content-Length': [chunk size],'Content-Type': '
+video/mp4'.
+
+***Some useful links:***
+
+- Article that covers all use cases https://betterprogramming.pub/video-stream-with-node-js-and-html5-320b3191a6b6
